@@ -1,3 +1,13 @@
+---
+layout:       post
+title:        "Windows 安装 Jekyll"
+author:       "Vito"
+header-style: text
+catalog:      true
+tags:
+    - jekyll
+---
+
 ### 1. 安装 Ruby
 
 * 下载安装 RubyInstallers ，推荐下载 Ruby+Devkit
