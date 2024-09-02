@@ -4,6 +4,8 @@ _posts/_archive
 _archive
 node_modules
 .vscode
+.idea
+Gemfile.lock
 *.log
 *.lock
 *.sh
