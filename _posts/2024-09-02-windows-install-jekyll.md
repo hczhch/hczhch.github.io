@@ -12,16 +12,16 @@ tags:
 
 * 下载安装 RubyInstallers ，推荐下载 Ruby+Devkit
   <https://rubyinstaller.org/downloads/>  
-  ![](../img/jekyll/jekyll01.png)
+  ![](/img/jekyll/jekyll01.png)
 
 * 安装：使用默认路径即可，避免出错；勾选添加到PATH，就不用手动添加环境变量了
-  ![](../img/jekyll/jekyll02.png)
+  ![](/img/jekyll/jekyll02.png)
 
 
 * 这里需要勾选安装msys2，后面安装gem和jekyll时会用到：
-  ![](../img/jekyll/jekyll03.png)  
-  ![](../img/jekyll/jekyll04.png)  
-  ![](../img/jekyll/jekyll05.png)
+  ![](/img/jekyll/jekyll03.png)  
+  ![](/img/jekyll/jekyll04.png)  
+  ![](/img/jekyll/jekyll05.png)
 
 ### 2. 安装 RubyGems
 <https://rubygems.org/pages/download>
