@@ -10,7 +10,7 @@ tags:
 
 ### 1. 安装 Ruby
 
-* 下载安装 RubyInstallers ，推荐下载 Ruby+Devkit
+* 下载安装 RubyInstallers ，推荐下载 Ruby+Devkit  
   <https://rubyinstaller.org/downloads/>  
   ![](/img/jekyll/jekyll01.png)
 
