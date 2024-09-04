@@ -1,10 +1,10 @@
 # Site settings
 title: Vito Blog
-SEOTitle: Vito Blog
+SEOTitle: 纤尘的博客 | Vito Blog
 header-img: img/home-bg.jpg
 email: hczhch@gmail.com
 description: "这里是 @Vito 的个人博客，与你一起发现更大的世界"
-keyword: "Vito, Vito Blog, 博客, 个人网站, 互联网, Web, Java, 分布式, 后端"
+keyword: "纤尘, Vito, Vito Blog, 博客, 纤尘的博客, 个人网站, 互联网, Web, Java, 分布式, 后端"
 url: "https://hczhch.github.io" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
@@ -16,7 +16,7 @@ RSS: false
 #weibo_username: huxpro
 #zhihu_username: huxpro
 github_username: hczhch
-#twitter_username: huxpro
+twitter_username: hczhch
 #facebook_username:  huxpro
 #linkedin_username:  firstname-lastname-idxxxx
 
