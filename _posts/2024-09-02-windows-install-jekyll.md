@@ -12,19 +12,19 @@ tags:
 
 * 下载安装 RubyInstallers ，推荐下载 Ruby+Devkit  
   <https://rubyinstaller.org/downloads/>  
-  ![](https://raw.githubusercontent.com/hczhch/hczhch.github.io/master/img/jekyll/jekyll01.png)  
+  ![](https://hczhch.github.io/img/jekyll/jekyll01.png)  
 
 * 安装：使用默认路径即可，避免出错；勾选添加到PATH，就不用手动添加环境变量了
-  ![](https://raw.githubusercontent.com/hczhch/hczhch.github.io/master/img/jekyll/jekyll02.png)  
+  ![](https://hczhch.github.io/img/jekyll/jekyll02.png)  
 
 
 * 这里需要勾选安装msys2，后面安装gem和jekyll时会用到：
-  ![](https://raw.githubusercontent.com/hczhch/hczhch.github.io/master/img/jekyll/jekyll03.png)  
-  ![](https://raw.githubusercontent.com/hczhch/hczhch.github.io/master/img/jekyll/jekyll04.png)  
-  ![](https://raw.githubusercontent.com/hczhch/hczhch.github.io/master/img/jekyll/jekyll05.png)
+  ![](https://hczhch.github.io/img/jekyll/jekyll03.png)  
+  ![](https://hczhch.github.io/img/jekyll/jekyll04.png)  
+  ![](https://hczhch.github.io/img/jekyll/jekyll05.png)  
 
 ### 2. 安装 RubyGems
-<https://rubygems.org/pages/download>
+<https://rubygems.org/pages/download>  
 
 * 下载后解压到任意路径；进入解压目录，打开cmd，输入以下命令：
   ```bash
