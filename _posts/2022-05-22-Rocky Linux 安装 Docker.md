@@ -9,7 +9,7 @@ tags:
 ---
 
 ### 官方文档：
-https://docs.docker.com/engine/install/centos/
+<https://docs.docker.com/engine/install/centos/>
 
 ### 1. 卸载旧版本
 旧版本的 Docker 被称为 docker 或 docker-engine 。如果已安装这些程序，请卸载它们以及相关的依赖项。
