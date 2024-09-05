@@ -164,7 +164,7 @@ sudo systemctl restart docker
 * 解决方法2  
 docker 守护进程启动的时候，会默认赋予名字为 docker 的用户组读写 Unix socket 的权限，因此只要创建 docker 用户组，并将当前用户加入到 docker 用户组中，那么当前用户就有权限访问 Unix socket 了，进而也就可以执行 docker 相关命令。
 
-```Shell
+```shell
 # 添加docker用户组
 [vito@dockerhost ~]$ sudo groupadd docker
 groupadd：“docker”组已存在
