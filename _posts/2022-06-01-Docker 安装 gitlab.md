@@ -36,14 +36,11 @@ services:
       - /home/vito/docker/volume/fdr_gitlab/logs:/var/log/gitlab
       - /home/vito/docker/volume/fdr_gitlab/data:/var/opt/gitlab
 ```
-* external_url "http://192.168.23.128:8082"  # 指定 http host:port （ 同时，容器内 gitlab 默认的 80 端口被更改为指定的 port ）
-
+* `external_url "http://192.168.23.128:8082"`  # 指定 http host:port （ 同时，容器内 gitlab 默认的 80 端口被更改为指定的 port ）
 * 由于主机 ssh 一般占用了 22 端口，所以 gitlab 的 ssh 需映射主机的其他端口。   
-* 配置中 gitlab_rails['gitlab_shell_ssh_port'] = 1023 修改的是 gitlab 的网页显示端口（映射到主机的端口），实际容器内的 ssh 仍然是 22 。
-
-* 查看 root 用户的默认密码： `docker exec -it fdr_gitlab grep 'Password:' /etc/gitlab/initial_root_password` ，应及时修改默认密码
-
-* gitlab 配置文件：/etc/gitlab/gitlab.rb （/home/vito/docker/volume/fdr_gitlab/config/gitlab.rb）
+* 配置中 `gitlab_rails['gitlab_shell_ssh_port'] = 1023` 修改的是 gitlab 的网页显示端口（映射到主机的端口），实际容器内的 ssh 仍然是 22 。
+* 查看 root 用户的默认密码： `docker exec -it fdr_gitlab grep 'Password:' /etc/gitlab/initial_root_password` ，应及时修改默认密码。
+* gitlab 配置文件：`/etc/gitlab/gitlab.rb` （/home/vito/docker/volume/fdr_gitlab/config/gitlab.rb）
   ```shell
   [root@mydockerhost fdr_gitlab]# vim /home/vito/docker/volume/fdr_gitlab/config/gitlab.rb
   gitlab_rails['smtp_enable'] = true
