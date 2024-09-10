@@ -1,6 +1,6 @@
 ---
 layout:       post
-title:        "2022-06-02-Docker 安装 Harbor 01"
+title:        "Docker 安装 Harbor 01"
 author:       "Vito"
 header-style: text
 catalog:      true
