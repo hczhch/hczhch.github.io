@@ -62,8 +62,7 @@ harbor_admin_password: Harbor12345
 data_volume: /home/vito/docker/volume/harbor
 ```
 
-* 安装
-
+##### 安装
 ```shell
 [vito@dockerhost harbor]$ ./prepare 
 [vito@dockerhost harbor]$ sudo ./install.sh
