@@ -5,7 +5,8 @@ author:       "Vito"
 header-style: text
 catalog:      true
 tags:
-    - docker
+    - Docker
+    - Docker Compose
 ---
 
 ### 官方文档

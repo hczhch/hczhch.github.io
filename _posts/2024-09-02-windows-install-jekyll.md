@@ -5,7 +5,7 @@ author:       "Vito"
 header-style: text
 catalog:      true
 tags:
-    - jekyll
+    - Jekyll
 ---
 
 ### 1. 安装 Ruby
