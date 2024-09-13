@@ -29,7 +29,9 @@ tags:
 ### 代码上传到 gitlab
 
 * 后端项目 tensquare_parent
+  * `https://gitee.com/hczhch/tensquare_parent/tree/docker/`
 * 前端项目 tensquareAdmin
+  * `https://gitee.com/hczhch/tensquare-admin/tree/docker/`
 
 ### 后端项目
 * jenkins 安装插件：`Publish Over SSH`、`Extended Choice Parameter`、`Environment Injector`
@@ -387,6 +389,4 @@ tags:
   ```
 * 前端部署完成后，访问 `http://tensquare-front-dev.zhch.lan` 验证部署是否成功
 
-* 项目源码
-  * 后端：`https://gitee.com/hczhch/tensquare_parent/tree/docker/`
-  * 前端：`https://gitee.com/hczhch/tensquare-admin/tree/docker/`
+
