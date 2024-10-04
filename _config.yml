@@ -70,7 +70,7 @@ netease_comment: false
 
 # Google Analytics
 ga_track_id: "G-ZHEM1SQ8S9" # Format: UA-xxxxxx-xx
-ga_domain: hczhch.github.io
+# ga_domain: hczhch.github.io
 
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
