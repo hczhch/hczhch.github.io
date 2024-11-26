@@ -5,7 +5,8 @@ author:       "Vito"
 header-style: text
 catalog:      true
 tags:
-    - Kubernetes Label
+    - Kubernetes
+    - Label
 ---
 
 ```shell
