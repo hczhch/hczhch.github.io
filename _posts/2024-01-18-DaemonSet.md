@@ -14,6 +14,11 @@ tags:
 
 ### 配置文件
 
+DaemonSet 用于在 Kubernetes 集群的每个节点上运行一个 Pod 副本，确保每个节点上都有一个 Pod 的副本在运行。  
+与 Deployment 和 StatefulSet 不同，DaemonSet 不关心副本数量，而是关注集群中的每个节点。  
+当新节点加入集群时，DaemonSet 会自动在新节点上创建 Pod 副本；当节点从集群中删除时，相应的 Pod 副本也会被删除。  
+DaemonSet 适用于运行系统级别的守护进程、日志收集器、监控代理等。
+
 ```shell
 [root@k8s-master1 test]# vim ds-fdr-fluentd.yaml
 apiVersion: apps/v1
