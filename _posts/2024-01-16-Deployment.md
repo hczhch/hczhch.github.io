@@ -12,6 +12,10 @@ tags:
 
 ### 配置文件
 
+Deployment 是 Kubernetes 中最常用的控制器之一，用于管理无状态的应用程序。它提供了应用程序的副本管理、自动扩展、滚动升级等功能。  
+Deployment 通过 ReplicaSet 实现副本管理，可以确保指定数量的 Pod 副本正在运行，并处理 Pod 的创建、删除和更新。  
+Deployment 适用于无状态应用程序，如 Web 服务、API 服务等。
+
 ```shell
 [root@k8s-master1 test]# kubectl create deploy vito-deploy-nginx --image=nginx:1.7.9
 deployment.apps/vito-deploy-nginx created
