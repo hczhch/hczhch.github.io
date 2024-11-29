@@ -1162,3 +1162,9 @@ spec:
               name: web
 ```
 
+## 项目实战
+
+- 后端项目：
+  - [https://gitee.com/hczhch/tensquare_parent/tree/k8s/](https://gitee.com/hczhch/tensquare_parent/tree/k8s/)
+- 前端项目：
+  - [https://gitee.com/hczhch/tensquare-admin/tree/k8s/](https://gitee.com/hczhch/tensquare-admin/tree/k8s/)
