@@ -11,6 +11,7 @@ tags:
     - Redis
     - RocketMQ
     - Nacos
+    - Seata
 
 ---
 
@@ -878,5 +879,286 @@ spec:
             name: nacos-headless
             port:
               name: server
+```
+
+
+
+## Seata
+
+* 在 Nacos 上为 Seata 创建一个新的 namespace ：空间名为 `Seata`
+* 在 Nacos 的 Seata 命名空间 新建配置（Data ID 为 seataServer.properties 、 Group 为 SEATA_GROUP）
+* 配置内容参考 <https://github.com/apache/incubator-seata/blob/v2.0.0/script/config-center/config.txt> 并按需修改保存。 截取本次案例修改部分的内容如下：
+
+```properties
+# 把 store.mode=file 改为 store.mode=db 代表采用数据库存储 Seata-Server 的全局事务数据
+#Transaction storage configuration, only for the server. The file, db, and redis configuration values are optional.
+store.mode=db
+store.lock.mode=db
+store.session.mode=db
+
+# 修改 store.db 全局事务数据库配置项（驱动、jdbc url、用户名密码等），稍后还要手动创建相应的 database 和 table
+store.db.url=jdbc:mysql://mysql-x.dev-mysql:3306/seata?characterEncoding=utf8&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true
+store.db.user=root
+store.db.password=xhBQ9QN7d+sF
+
+# 事务逻辑分组 与 Seata 服务端集群的映射关系
+# 等号右侧是 seata 集群名（集群名称由 seata 服务端在 application.yml (seata.registry.nacos.cluster) 文件中设置）
+# 'default_tx_group'是自定义的事务逻辑分组名称，每行配置一个事务逻辑分组，可配置多个
+# 事务逻辑分组名在 seata 客户端中会被用到（ seata 客户端需要指明其所属的事务逻辑分组，通常在 yml 或 properties 文件中通过 seata.tx-service-group 配置项指定）
+service.vgroupMapping.default_tx_group=default
+# TC服务列表，仅注册中心为file时使用，nacos 作为注册中心时可忽略或删除该项
+service.default.grouplist=127.0.0.1:8091
+```
+
+* 创建并初始化 Seata-Server 全局事务数据库
+  * <https://github.com/apache/incubator-seata/blob/v2.0.0/script/server/db/mysql.sql>
+    * global_table 保存全局事务数据；　　
+    * branch_table 保存分支事务数据；
+    * lock_table 保存锁定资源数据
+
+```sql
+-- -------------------------------- The script used when storeMode is 'db' --------------------------------
+-- the table to store GlobalSession data
+CREATE TABLE IF NOT EXISTS `global_table`
+(
+    `xid`                       VARCHAR(128) NOT NULL,
+    `transaction_id`            BIGINT,
+    `status`                    TINYINT      NOT NULL,
+    `application_id`            VARCHAR(32),
+    `transaction_service_group` VARCHAR(32),
+    `transaction_name`          VARCHAR(128),
+    `timeout`                   INT,
+    `begin_time`                BIGINT,
+    `application_data`          VARCHAR(2000),
+    `gmt_create`                DATETIME,
+    `gmt_modified`              DATETIME,
+    PRIMARY KEY (`xid`),
+    KEY `idx_status_gmt_modified` (`status` , `gmt_modified`),
+    KEY `idx_transaction_id` (`transaction_id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- the table to store BranchSession data
+CREATE TABLE IF NOT EXISTS `branch_table`
+(
+    `branch_id`         BIGINT       NOT NULL,
+    `xid`               VARCHAR(128) NOT NULL,
+    `transaction_id`    BIGINT,
+    `resource_group_id` VARCHAR(32),
+    `resource_id`       VARCHAR(256),
+    `branch_type`       VARCHAR(8),
+    `status`            TINYINT,
+    `client_id`         VARCHAR(64),
+    `application_data`  VARCHAR(2000),
+    `gmt_create`        DATETIME(6),
+    `gmt_modified`      DATETIME(6),
+    PRIMARY KEY (`branch_id`),
+    KEY `idx_xid` (`xid`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- the table to store lock data
+CREATE TABLE IF NOT EXISTS `lock_table`
+(
+    `row_key`        VARCHAR(128) NOT NULL,
+    `xid`            VARCHAR(128),
+    `transaction_id` BIGINT,
+    `branch_id`      BIGINT       NOT NULL,
+    `resource_id`    VARCHAR(256),
+    `table_name`     VARCHAR(32),
+    `pk`             VARCHAR(36),
+    `status`         TINYINT      NOT NULL DEFAULT '0' COMMENT '0:locked ,1:rollbacking',
+    `gmt_create`     DATETIME,
+    `gmt_modified`   DATETIME,
+    PRIMARY KEY (`row_key`),
+    KEY `idx_status` (`status`),
+    KEY `idx_branch_id` (`branch_id`),
+    KEY `idx_xid` (`xid`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `distributed_lock`
+(
+    `lock_key`       CHAR(20) NOT NULL,
+    `lock_value`     VARCHAR(20) NOT NULL,
+    `expire`         BIGINT,
+    primary key (`lock_key`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('AsyncCommitting', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('RetryCommitting', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('RetryRollbacking', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('TxTimeoutCheck', ' ', 0);
+```
+
+* install seata server
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-seata
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: zhch.lan
+  namespace: dev-seata
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZuakNDQTRhZ0F3SUJBZ0lVWXhDSDhnWVRrL2hHK0lnSnd5QXhIdEtYN2Jzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1pqRUxNQWtHQTFVRUJoTUNRMDR4RWpBUUJnTlZCQWdNQ1VkMVlXNW5aRzl1WnpFU01CQUdBMVVFQnd3SgpSM1ZoYm1kNmFHOTFNUTB3Q3dZRFZRUUtEQVI2YUdOb01RMHdDd1lEVlFRTERBUjZhR05vTVJFd0R3WURWUVFECkRBaDZhR05vTG14aGJqQWdGdzB5TXpFeU1URXdOakExTVRsYUdBOHlNVEl6TVRFeE56QTJNRFV4T1Zvd1pqRUwKTUFrR0ExVUVCaE1DUTA0eEVqQVFCZ05WQkFnTUNVZDFZVzVuWkc5dVp6RVNNQkFHQTFVRUJ3d0pSM1ZoYm1kNgphRzkxTVEwd0N3WURWUVFLREFSNmFHTm9NUTB3Q3dZRFZRUUxEQVI2YUdOb01SRXdEd1lEVlFRRERBaDZhR05vCkxteGhiakNDQWlJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dJUEFEQ0NBZ29DZ2dJQkFNMDNHNjV5OUlIR1VEdVMKWXpqNHdsMUpFNE9ZWlUyeXZZRWhTYzVaZngrYXVuM09MM1BRVG00eUY5cFIvMDlCYzRZNmcxU2NtSmhTWnI0dgpDNGFWS1FxcmtyYnhEM0VRREg0dEcxdnprUmZaTmxFNFA2bG5XUWYyS0g4RmVRdEtuWHpGNm0xK3Y3M0grQmlQCmJyMnlYUkRqUUNWWm5QZXM5NEhuUExGRFNhSXNpME1oNmFuc29nM0h4bnoybnZnRWQ4bndEekJhc1Rwd0wvR0QKOFlPOFN5ZmhEcE5tdmozZmx5bmQ5TWJFREpWcHBTN1pXbC9UTG1GNHJEZy9WRUJkSkVSR05lMk4xYkR3K3VQdQo1VXdYV2ZmNzduVnNuTS9VaFV6b3JlMU01U3Vwbll3ZkxQaWZxUmlSRTFOVEd1dHhpQm9LRlQ3blNsUVVRZWNhCkZwV0pNUHBTMU54M1l0eFM0eHFxakhJZEduR3V3eDQ3WFk0MjNOUGROcDlMUnM3THRHQ2lFYlhGeWVOM3FmNEgKTWxKQzdudCtVbmtob2dtQ2Urek5TajlmenpSOTdJcmEwTGVTNm9FaFg3ZXVWYU51VGNjZG1nRU9uc2xzZUZEWgp3bHVwREwvV2hjZmNjUkM1UGUwZFBqR0VBeW1ZcXAxelJ1OXNKSTRmUHFoTkVVRmZSUUpsSTExWVp3S1lmMzcvCnBOV0g4a25lNWlBU01Sd2tJdzN6V290REpyQVl3WVFjYzJIaytlUEJyeUFaaG5BcnVPaVZIUDdYQ3lwUFBpeTAKRXJmYWcrc1N3aUVjSzZsZUw1dTdDdWRQN3Y4b1FEcklENWRXZS8zMFI5MDN4Z3NJSUpYOG9qZlFDdzhwTXZ1dApaWnU1RGxmN0JVSHNuRmE2ZWZEVjVSdEdaQ0dSQWdNQkFBR2pRakJBTUI4R0ExVWRFUVFZTUJhQ0NIcG9ZMmd1CmJHRnVnZ29xTG5wb1kyZ3ViR0Z1TUIwR0ExVWREZ1FXQkJSSklHVjk2bURjNEY5OU9ybDRSWCs1MTMrc2ZEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBZ0VBdTNLV0JJVVNWOExVK2VoamdyM2ZnSVdSWGZmekZRSUhXc2tGcXRLSgp3YVZISVdCaG1Eakx0cTdEczFJam01MlZ5ekVXZ0xiUllmbTVlbmFlWDlISm8rTVkyMytjTWlUTEFVZitVRG9DClN1Y0V1NnZaVFhKSVlDWUM1ZFJKWGVMZTlBMWhhZ1VHRUJqZmIwYitRUEh5WHhwdFpVeWloSlluNHJPUmkrd3cKMkZJdU5zdlRIMkcxOXdpeXgxTHQzUUd2ekVoSnRIWWNRNTNSVzQwazE3eHNYMTBvVlBSeFZEVFVjclN4cnljVAoyeTJxcndJNm9zb0JjTWtIYkRhQUtzRXZkZUZhdnZtbFF4Z3Y0QkZaMVR6dCsxWjZVcGVLQXB6YkJJenIzamw4CjVIQS9oVGd5V0hGRlMrY1NYdzN4bVhkbzZkMW9YUFhVQXhaSWpTd29USjJWalNCd2lxOFJocjh3ekl1cGszdk8KcUlhZ0JuczB1TmYrK3lhRlJFbXdsWjhTY21aTVhwRWptanFWTC9mQUdYRGsreTNZSnFIUm9KUjltSzdGdndXWAplMnN3UkVZNFN1TDdqbDhvSVhpSTNQQ2poR1B2VWxPc0lvVUNXQW9yZ24wYW5IQTEyYW1NQ3VFcEIxSWkvNllpClVoQ0ZLOTFlUno0ZzdiWVZpZ2VVd2JnUmtvOVEwVmt3SjJqMjFOdDdPRXorR0Z1YUNKeVZEaHY3WE5YOHR2cVcKRS9LS1VYbTkyeW1rWTIzNjNKUTRDbE5XNkpadHVSYjg5L1RyYjFtdis4dnVpUmh5dlcvU3ZPS3FkbTQvRlVaVwpPNlR5Q0tubVdXZWJZV1ZpU2c3NEQzYmhpdGNvV21kZDdFd0hBSERaeFNoN0U1TWEvbTlrbzc0ZWRFQ2lKd3BNCnE5ST0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUpRZ0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQ1N3d2dna29BZ0VBQW9JQ0FRRE5OeHV1Y3ZTQnhsQTcKa21NNCtNSmRTUk9EbUdWTnNyMkJJVW5PV1g4Zm1ycDl6aTl6MEU1dU1oZmFVZjlQUVhPR09vTlVuSmlZVW1hKwpMd3VHbFNrS3E1SzI4UTl4RUF4K0xSdGI4NUVYMlRaUk9EK3BaMWtIOWloL0JYa0xTcDE4eGVwdGZyKzl4L2dZCmoyNjlzbDBRNDBBbFdaejNyUGVCNXp5eFEwbWlMSXRESWVtcDdLSU54OFo4OXA3NEJIZko4QTh3V3JFNmNDL3gKZy9HRHZFc240UTZUWnI0OTM1Y3AzZlRHeEF5VmFhVXUyVnBmMHk1aGVLdzRQMVJBWFNSRVJqWHRqZFd3OFByago3dVZNRjFuMysrNTFiSnpQMUlWTTZLM3RUT1VycVoyTUh5ejRuNmtZa1JOVFV4cnJjWWdhQ2hVKzUwcFVGRUhuCkdoYVZpVEQ2VXRUY2QyTGNVdU1hcW94eUhScHhyc01lTzEyT050elQzVGFmUzBiT3k3UmdvaEcxeGNuamQ2bisKQnpKU1F1NTdmbEo1SWFJSmdudnN6VW8vWDg4MGZleUsydEMza3VxQklWKzNybFdqYmszSEhab0JEcDdKYkhoUQoyY0picVF5LzFvWEgzSEVRdVQzdEhUNHhoQU1wbUtxZGMwYnZiQ1NPSHo2b1RSRkJYMFVDWlNOZFdHY0NtSDkrCi82VFZoL0pKM3VZZ0VqRWNKQ01OODFxTFF5YXdHTUdFSEhOaDVQbmp3YThnR1lad0s3am9sUnorMXdzcVR6NHMKdEJLMzJvUHJFc0loSEN1cFhpK2J1d3JuVCs3L0tFQTZ5QStYVm52OTlFZmROOFlMQ0NDVi9LSTMwQXNQS1RMNwpyV1didVE1WCt3VkI3SnhXdW5udzFlVWJSbVFoa1FJREFRQUJBb0lCLzN6emNRZG5OemxOWnN6ZTlVdGJLLzFnCjRXRGZDYytsWlgyYXB6WGRpR25WN0hkdGM3Y3d2cENhTDZ2ZkFYVmdoTmJXQ2VFYStFN0czWWd2WFBVMUhTaEMKRDdNVVZES2pjdmZndnlmZHhocWZSMU5zekZaNWR0eENKYVl4enVIeExMTXNUdkVjbStNU1B4MjFOOWlKSWVHRwpmU2hBeURLR1BxMzUvaHB3dmdUZzJtcWwyNEI3ZExDdlUwd0RYZ2Zsc0lwa2dOc1FYWmtYZGhtNEhQWDVVRW1YCjN5Z2hCdlRsajBVT3dGdkdRMk0yVUQyV1dsQytaUjgwT3FpRTV1Zkp6cXREbE5KdjZnMHlyWkRiaFFJdnRiZ28KemFqeDJRa3lmWGUydFRBb0FlSDBCTm1zb2RWQVlkVnpnRERjQ1NnU21LeENOMjExcHV4SzZWV3RyTktnRmhFOQpJUXM5Rit6cTVGTkFOS2VZbEUxZFhkY1ArU0l6SUsyRXl0TVhjWTBmd0hha1BpWlRLMW1Ud2JMYkQyb1Jvck80CjRtUEEwak1BWEJ4QkdRUlFxNldTc28rVjZFdHV6ZzhJNnRJKzBCOFIzVmpaZDQ2Mlh4SUNoTTBzNWZNbFpRYm0KNlBWNmdFTWlpMi84Umh2S1Q4eXlkdThDMDRnbExwbHlnMlB5UElWSC9LdHplN2hKWGVZeldjempmTWxCYm9NQgpqQlBwODVCSitZa2dqbmhJK3FCS09GaU5FaDN5OS9QclVMSHBza0IwNkptaVJGSWFKQkpLSjlJd05lMGxuZzg1CmFuWE9MQTFIL2FDL1VUekpYeG9DNnA2VVJPajZQdC8xSjdNc0RCbEJHOXRhTnlKcHRkWEhrODIvUHFXbnBFSUgKMzRXSGMwdWNqMmtsV2NZLzF6a0NnZ0VCQVBnREgzTjdHR1RESitDdWhTRXdlN3JnUmYvNzlaZUtXeFdIWlM2ZApHRS9xQjZYUGNHOFJZdE5abnpobGxNQVZVdWlnM2VOR0lYdE5oUE0wcVlVeExDb0tRek1JWC9oblcxQTdoOUg5Cml5dVRoSFB5elNIK2dwNnYzaDZEYkdWUSs0Mys2d3JlZ3JhNlhjaGFNVmhBY285d2t6cXpaVWRHZk5VRVZSKzcKUDBBUkpPWDhrSlpHc0U2aHpiL3c1aXAwUFRwTlZMQzRSNEtmODgzeU5CeGVLY0MvNGYxSVlaTXBUR3ZreCthaQo5RGlJOTlqTTgxNW9vR3lNOXF4REZqaDVEdStHMzlwOVRYT2NuZDVGYjdLM2lrWDk3YjhwMXk4d0RoWEhOV3V6CkpMazRwdGtHRnJTLzJlaXdvWVo3aHhZTmdZMythODhzWVlUWEs4NlNzRVgvTXFrQ2dnRUJBTlBUSHlnNHlxL1AKZkU0NjM0NGJ6d244WUF3UFhNMnpLUmRqSFkvTlo0cEhicmRhT09qN0pBK0J6YS9KTjZkTzlsRDc4YWEyVURLYgpPNGJONTBzRDY1anBwK0lqUnp5OE82TEkzTnhVTlRHMkZmZkRyNkJmd3NwYUd2VTRrZjBwdVlnUTE2b0VUVk1aCnR4dmgvNmV1Mi9sbFdPTmRFUkZzaktucUhkNFhDYkJVLzNpOTBkdWxRRkZCcXh1Q1lMSzkzZkJBeXArZ3NiODMKYm84djdrMUJ5eFh6Q2l1ZlZONFlNYkc3WUQyK0RrY1lDSHJXWVgrdGkyL0VIeGErMEhmaXNiSmNhaWcyZjAycApHM0d5ejRPVTE5SnI5enJDM2xaQ0hzQ3ZuVE5YT21TOG85eEJOTTh1RDBvWXNlVWtKYUs4QUtOcldBVkNRclZjCkhNSzhSa3VNTUtrQ2dnRUJBT25md0FQZE81YWhkZlJwZm45YXdnTHF4UGZ0T0o0cnlWTFc5L0pxRCtna01Bd0wKUHVKdUNieDJVakFUa3A5RVBJZkVVeG1rSTZTcjZFaVVDNXZmVDk5aENCZVN1VFY4K2Q0Q0ZVVlBpN0tQREtOdQpma1NsUmJXdzhJdmpzUThsdStJZVZyVk1PUVZwWDFDMHhMMk5JTHJsRk9HUkZGdVBPOTZBbEdrMDRTTmdSMlJkCnRGY1IxK1orckpCbzhoTnN3K1E3MGpaSHdKK01pSk5YNkE0c09jRmE4Umd3N2xxZzRrRUlYLzI5QXdKaEh4K2gKdlluMHJmdFBQcm9aRlZZeHlvVFRzanJPV0lCQ1c1aWo3LzRmR0ZTQ2JYVU1WckJYNTZCZjE1OTFNcGM3dGhNSApxOWZNNXdlSHNQb3BlS3l5RmM2NThoNU9vck5yV1JNV3Z3Vnk3dWtDZ2dFQkFKUWFZd2grWE1qNzYwL1BQZ3RnClNpd1ROeHgzaVUyUlhNT3JXem4yUmRTYkNVQk5ac2tPL3pHUWNqM2NGSHQ0YkNSSFk3aEtkRnhOeVJzQjBCdlYKQzk4SVQ0ZC9Yd21LR3JCQWZKdllqTERMUFNUVXYzRUVRMit6L0hGRU1sNnQwN2pjL2MwejROU2ZnRFdRbUcybgpoc29qSURrb0V3ejV0b2YrMXc4M1VHRG5yUS9BdUlBNFZIWDcwaVVUellScjJFZHBKY0xpV2lUMkh1a2lmQjJzClNOQjU4N3g0VktCTWprSlVYb0FNNkhLd3pRMEY0M21mMzRRdnZnVHJPVnI1TjRFYnVHV1JaUVRwbmZTckx3Z3oKQTR0dVRaZmFOQlpmZUowRXJJYi9FQ2JxOWk3RHNLYkM3NUhCSG5DMkMxSnkzSWRtUUU2OCsyTk9taFZXQ2xnOApGckVDZ2dFQU53WlpnN2ZXaEl4emlrcnBia1Vsa0JQR283RVh4T2hpcG4vU3VzY3kzd01nR0RDRm9ISFdrajY1CndtN2tKMGVxL1hrTE5KVXZEWllNbkFJZ2tFYnFyeXREaW5TVnlYUGt1S3FnTURlV1ZMRnFTZ3ppdWUwUHdIRncKeHNFNnIrR3JzTGhhVHR5M3YxemRUclg2dTczclNuN0xZVWs5S2hURjR3ajF4UmJWSjdNd0RNb01PNnFDMTFzTAp5aXM4NmxSM3dwNnlSaTlHMUpqTmpsTTNSa1ZXV2VCM0VYUE1HVjkvMmlUbE5zc0ppTTJEdnJ2SEtYcHczWExiClFVOHVySlRrdG12U0ErcU1LbUJKRWMrZXFhL1M5OTYyT3hDLzBmYTBOQUMxWmxJcHpPNEFKSDBQZXdHZjhBVWUKMEh6anc1QUdoT2dGQUgySzhCTkk4dk05QXdLaE9nPT0KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seata-server-config
+  namespace: dev-seata
+data:
+  # https://github.com/apache/incubator-seata/blob/v2.0.0/server/src/main/resources/application.yml
+  application.yml: |
+    server:
+      port: 7091
+    
+    spring:
+      application:
+        name: seata-server
+    
+    logging:
+      config: classpath:logback-spring.xml
+      file:
+        path: ${log.home:${user.home}/logs/seata}
+      extend:
+        logstash-appender:
+          destination: 127.0.0.1:4560
+        kafka-appender:
+          bootstrap-servers: 127.0.0.1:9092
+          topic: logback_to_logstash
+    
+    console:
+      user:
+        username: seata
+        password: seata
+    seata:
+      server:
+        service-port: 8091 #If not configured, the default is '${server.port} + 1000'
+      config:
+        # support: nacos, consul, apollo, zk, etcd3
+        type: nacos
+        nacos:
+          server-addr: nacos-headless.dev-nacos:8848
+          username: "nacos" # NACOS 集群启用集群鉴权后，客户端需设置 username 和 password
+          password: "nacos"
+          namespace: 53b846ba-0cfe-417f-a225-4f0bac803abe # Nacos 中创建的名为 `Seata` 的 namespace 的 ID
+          group: SEATA_GROUP
+          data-id: seataServer.properties
+      registry:
+        # support: nacos, eureka, redis, zk, consul, etcd3, sofa
+        # 当 registry.type=file 时用的不是真正的注册中心，不具备服务的健康检查机制，当 TC 不可用时无法自动剔除
+        type: nacos
+        nacos:
+          application: seata-server
+          server-addr: nacos-headless.dev-nacos:8848
+          username: "nacos"
+          password: "nacos"
+          group: SEATA_GROUP
+          namespace: 53b846ba-0cfe-417f-a225-4f0bac803abe
+          cluster: default # 指定注册至nacos注册中心的集群名
+      store:
+        # support: file 、 db 、 redis
+        # file 存储模式下未提供本地文件同步的功能，不能使用 file 存储模式搭建 Seata 集群
+        mode: db
+
+      security:
+        secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+        tokenValidityInMilliseconds: 1800000
+        ignore:
+          urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.jpeg,/**/*.ico,/api/v1/auth/login,/metadata/v1/**
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seata-server
+  namespace: dev-seata
+  labels:
+    app: seata-server
+spec:
+  selector:
+    app: seata-server
+  type: ClusterIP
+  ports:
+    - port: 8091
+      protocol: TCP
+      name: service
+    - port: 7091
+      protocol: TCP
+      name: web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seata-server
+  namespace:  dev-seata
+  labels:
+    app: seata-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: seata-server
+  template:
+    metadata:
+      labels:
+        app: seata-server
+    spec:
+      containers:
+        - name: seata-server
+          image: seataio/seata-server:2.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: service
+              containerPort: 8091
+              protocol: TCP
+            - name: web
+              containerPort: 7091
+              protocol: TCP
+          volumeMounts:
+            - name: seata-config
+              mountPath: /seata-server/resources/application.yml
+              subPath: application.yml
+            - name: timezone
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: seata-config
+          configMap:
+            name: seata-server-config
+        - name: timezone
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: seata-server
+  namespace: dev-seata
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - seata-web.zhch.lan
+    secretName: zhch.lan
+  rules:
+  - host: seata-web.zhch.lan
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: seata-server
+            port:
+              name: web
 ```
 
