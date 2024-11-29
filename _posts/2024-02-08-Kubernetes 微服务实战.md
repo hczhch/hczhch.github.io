@@ -10,6 +10,7 @@ tags:
     - MySQL
     - Redis
     - RocketMQ
+    - Nacos
 
 ---
 
@@ -638,5 +639,244 @@ NOTES:
 
 >>> Visit RocketMQ Dashboard:
     https://rocketmq-dashboard.zhch.lan/
+```
+
+
+
+## Nacos
+
+* <https://github.com/nacos-group/nacos-k8s/blob/master/deploy/nacos/nacos-pvc-nfs.yaml>
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-nacos
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: zhch.lan
+  namespace: dev-nacos
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZuakNDQTRhZ0F3SUJBZ0lVWXhDSDhnWVRrL2hHK0lnSnd5QXhIdEtYN2Jzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1pqRUxNQWtHQTFVRUJoTUNRMDR4RWpBUUJnTlZCQWdNQ1VkMVlXNW5aRzl1WnpFU01CQUdBMVVFQnd3SgpSM1ZoYm1kNmFHOTFNUTB3Q3dZRFZRUUtEQVI2YUdOb01RMHdDd1lEVlFRTERBUjZhR05vTVJFd0R3WURWUVFECkRBaDZhR05vTG14aGJqQWdGdzB5TXpFeU1URXdOakExTVRsYUdBOHlNVEl6TVRFeE56QTJNRFV4T1Zvd1pqRUwKTUFrR0ExVUVCaE1DUTA0eEVqQVFCZ05WQkFnTUNVZDFZVzVuWkc5dVp6RVNNQkFHQTFVRUJ3d0pSM1ZoYm1kNgphRzkxTVEwd0N3WURWUVFLREFSNmFHTm9NUTB3Q3dZRFZRUUxEQVI2YUdOb01SRXdEd1lEVlFRRERBaDZhR05vCkxteGhiakNDQWlJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dJUEFEQ0NBZ29DZ2dJQkFNMDNHNjV5OUlIR1VEdVMKWXpqNHdsMUpFNE9ZWlUyeXZZRWhTYzVaZngrYXVuM09MM1BRVG00eUY5cFIvMDlCYzRZNmcxU2NtSmhTWnI0dgpDNGFWS1FxcmtyYnhEM0VRREg0dEcxdnprUmZaTmxFNFA2bG5XUWYyS0g4RmVRdEtuWHpGNm0xK3Y3M0grQmlQCmJyMnlYUkRqUUNWWm5QZXM5NEhuUExGRFNhSXNpME1oNmFuc29nM0h4bnoybnZnRWQ4bndEekJhc1Rwd0wvR0QKOFlPOFN5ZmhEcE5tdmozZmx5bmQ5TWJFREpWcHBTN1pXbC9UTG1GNHJEZy9WRUJkSkVSR05lMk4xYkR3K3VQdQo1VXdYV2ZmNzduVnNuTS9VaFV6b3JlMU01U3Vwbll3ZkxQaWZxUmlSRTFOVEd1dHhpQm9LRlQ3blNsUVVRZWNhCkZwV0pNUHBTMU54M1l0eFM0eHFxakhJZEduR3V3eDQ3WFk0MjNOUGROcDlMUnM3THRHQ2lFYlhGeWVOM3FmNEgKTWxKQzdudCtVbmtob2dtQ2Urek5TajlmenpSOTdJcmEwTGVTNm9FaFg3ZXVWYU51VGNjZG1nRU9uc2xzZUZEWgp3bHVwREwvV2hjZmNjUkM1UGUwZFBqR0VBeW1ZcXAxelJ1OXNKSTRmUHFoTkVVRmZSUUpsSTExWVp3S1lmMzcvCnBOV0g4a25lNWlBU01Sd2tJdzN6V290REpyQVl3WVFjYzJIaytlUEJyeUFaaG5BcnVPaVZIUDdYQ3lwUFBpeTAKRXJmYWcrc1N3aUVjSzZsZUw1dTdDdWRQN3Y4b1FEcklENWRXZS8zMFI5MDN4Z3NJSUpYOG9qZlFDdzhwTXZ1dApaWnU1RGxmN0JVSHNuRmE2ZWZEVjVSdEdaQ0dSQWdNQkFBR2pRakJBTUI4R0ExVWRFUVFZTUJhQ0NIcG9ZMmd1CmJHRnVnZ29xTG5wb1kyZ3ViR0Z1TUIwR0ExVWREZ1FXQkJSSklHVjk2bURjNEY5OU9ybDRSWCs1MTMrc2ZEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBZ0VBdTNLV0JJVVNWOExVK2VoamdyM2ZnSVdSWGZmekZRSUhXc2tGcXRLSgp3YVZISVdCaG1Eakx0cTdEczFJam01MlZ5ekVXZ0xiUllmbTVlbmFlWDlISm8rTVkyMytjTWlUTEFVZitVRG9DClN1Y0V1NnZaVFhKSVlDWUM1ZFJKWGVMZTlBMWhhZ1VHRUJqZmIwYitRUEh5WHhwdFpVeWloSlluNHJPUmkrd3cKMkZJdU5zdlRIMkcxOXdpeXgxTHQzUUd2ekVoSnRIWWNRNTNSVzQwazE3eHNYMTBvVlBSeFZEVFVjclN4cnljVAoyeTJxcndJNm9zb0JjTWtIYkRhQUtzRXZkZUZhdnZtbFF4Z3Y0QkZaMVR6dCsxWjZVcGVLQXB6YkJJenIzamw4CjVIQS9oVGd5V0hGRlMrY1NYdzN4bVhkbzZkMW9YUFhVQXhaSWpTd29USjJWalNCd2lxOFJocjh3ekl1cGszdk8KcUlhZ0JuczB1TmYrK3lhRlJFbXdsWjhTY21aTVhwRWptanFWTC9mQUdYRGsreTNZSnFIUm9KUjltSzdGdndXWAplMnN3UkVZNFN1TDdqbDhvSVhpSTNQQ2poR1B2VWxPc0lvVUNXQW9yZ24wYW5IQTEyYW1NQ3VFcEIxSWkvNllpClVoQ0ZLOTFlUno0ZzdiWVZpZ2VVd2JnUmtvOVEwVmt3SjJqMjFOdDdPRXorR0Z1YUNKeVZEaHY3WE5YOHR2cVcKRS9LS1VYbTkyeW1rWTIzNjNKUTRDbE5XNkpadHVSYjg5L1RyYjFtdis4dnVpUmh5dlcvU3ZPS3FkbTQvRlVaVwpPNlR5Q0tubVdXZWJZV1ZpU2c3NEQzYmhpdGNvV21kZDdFd0hBSERaeFNoN0U1TWEvbTlrbzc0ZWRFQ2lKd3BNCnE5ST0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUpRZ0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQ1N3d2dna29BZ0VBQW9JQ0FRRE5OeHV1Y3ZTQnhsQTcKa21NNCtNSmRTUk9EbUdWTnNyMkJJVW5PV1g4Zm1ycDl6aTl6MEU1dU1oZmFVZjlQUVhPR09vTlVuSmlZVW1hKwpMd3VHbFNrS3E1SzI4UTl4RUF4K0xSdGI4NUVYMlRaUk9EK3BaMWtIOWloL0JYa0xTcDE4eGVwdGZyKzl4L2dZCmoyNjlzbDBRNDBBbFdaejNyUGVCNXp5eFEwbWlMSXRESWVtcDdLSU54OFo4OXA3NEJIZko4QTh3V3JFNmNDL3gKZy9HRHZFc240UTZUWnI0OTM1Y3AzZlRHeEF5VmFhVXUyVnBmMHk1aGVLdzRQMVJBWFNSRVJqWHRqZFd3OFByago3dVZNRjFuMysrNTFiSnpQMUlWTTZLM3RUT1VycVoyTUh5ejRuNmtZa1JOVFV4cnJjWWdhQ2hVKzUwcFVGRUhuCkdoYVZpVEQ2VXRUY2QyTGNVdU1hcW94eUhScHhyc01lTzEyT050elQzVGFmUzBiT3k3UmdvaEcxeGNuamQ2bisKQnpKU1F1NTdmbEo1SWFJSmdudnN6VW8vWDg4MGZleUsydEMza3VxQklWKzNybFdqYmszSEhab0JEcDdKYkhoUQoyY0picVF5LzFvWEgzSEVRdVQzdEhUNHhoQU1wbUtxZGMwYnZiQ1NPSHo2b1RSRkJYMFVDWlNOZFdHY0NtSDkrCi82VFZoL0pKM3VZZ0VqRWNKQ01OODFxTFF5YXdHTUdFSEhOaDVQbmp3YThnR1lad0s3am9sUnorMXdzcVR6NHMKdEJLMzJvUHJFc0loSEN1cFhpK2J1d3JuVCs3L0tFQTZ5QStYVm52OTlFZmROOFlMQ0NDVi9LSTMwQXNQS1RMNwpyV1didVE1WCt3VkI3SnhXdW5udzFlVWJSbVFoa1FJREFRQUJBb0lCLzN6emNRZG5OemxOWnN6ZTlVdGJLLzFnCjRXRGZDYytsWlgyYXB6WGRpR25WN0hkdGM3Y3d2cENhTDZ2ZkFYVmdoTmJXQ2VFYStFN0czWWd2WFBVMUhTaEMKRDdNVVZES2pjdmZndnlmZHhocWZSMU5zekZaNWR0eENKYVl4enVIeExMTXNUdkVjbStNU1B4MjFOOWlKSWVHRwpmU2hBeURLR1BxMzUvaHB3dmdUZzJtcWwyNEI3ZExDdlUwd0RYZ2Zsc0lwa2dOc1FYWmtYZGhtNEhQWDVVRW1YCjN5Z2hCdlRsajBVT3dGdkdRMk0yVUQyV1dsQytaUjgwT3FpRTV1Zkp6cXREbE5KdjZnMHlyWkRiaFFJdnRiZ28KemFqeDJRa3lmWGUydFRBb0FlSDBCTm1zb2RWQVlkVnpnRERjQ1NnU21LeENOMjExcHV4SzZWV3RyTktnRmhFOQpJUXM5Rit6cTVGTkFOS2VZbEUxZFhkY1ArU0l6SUsyRXl0TVhjWTBmd0hha1BpWlRLMW1Ud2JMYkQyb1Jvck80CjRtUEEwak1BWEJ4QkdRUlFxNldTc28rVjZFdHV6ZzhJNnRJKzBCOFIzVmpaZDQ2Mlh4SUNoTTBzNWZNbFpRYm0KNlBWNmdFTWlpMi84Umh2S1Q4eXlkdThDMDRnbExwbHlnMlB5UElWSC9LdHplN2hKWGVZeldjempmTWxCYm9NQgpqQlBwODVCSitZa2dqbmhJK3FCS09GaU5FaDN5OS9QclVMSHBza0IwNkptaVJGSWFKQkpLSjlJd05lMGxuZzg1CmFuWE9MQTFIL2FDL1VUekpYeG9DNnA2VVJPajZQdC8xSjdNc0RCbEJHOXRhTnlKcHRkWEhrODIvUHFXbnBFSUgKMzRXSGMwdWNqMmtsV2NZLzF6a0NnZ0VCQVBnREgzTjdHR1RESitDdWhTRXdlN3JnUmYvNzlaZUtXeFdIWlM2ZApHRS9xQjZYUGNHOFJZdE5abnpobGxNQVZVdWlnM2VOR0lYdE5oUE0wcVlVeExDb0tRek1JWC9oblcxQTdoOUg5Cml5dVRoSFB5elNIK2dwNnYzaDZEYkdWUSs0Mys2d3JlZ3JhNlhjaGFNVmhBY285d2t6cXpaVWRHZk5VRVZSKzcKUDBBUkpPWDhrSlpHc0U2aHpiL3c1aXAwUFRwTlZMQzRSNEtmODgzeU5CeGVLY0MvNGYxSVlaTXBUR3ZreCthaQo5RGlJOTlqTTgxNW9vR3lNOXF4REZqaDVEdStHMzlwOVRYT2NuZDVGYjdLM2lrWDk3YjhwMXk4d0RoWEhOV3V6CkpMazRwdGtHRnJTLzJlaXdvWVo3aHhZTmdZMythODhzWVlUWEs4NlNzRVgvTXFrQ2dnRUJBTlBUSHlnNHlxL1AKZkU0NjM0NGJ6d244WUF3UFhNMnpLUmRqSFkvTlo0cEhicmRhT09qN0pBK0J6YS9KTjZkTzlsRDc4YWEyVURLYgpPNGJONTBzRDY1anBwK0lqUnp5OE82TEkzTnhVTlRHMkZmZkRyNkJmd3NwYUd2VTRrZjBwdVlnUTE2b0VUVk1aCnR4dmgvNmV1Mi9sbFdPTmRFUkZzaktucUhkNFhDYkJVLzNpOTBkdWxRRkZCcXh1Q1lMSzkzZkJBeXArZ3NiODMKYm84djdrMUJ5eFh6Q2l1ZlZONFlNYkc3WUQyK0RrY1lDSHJXWVgrdGkyL0VIeGErMEhmaXNiSmNhaWcyZjAycApHM0d5ejRPVTE5SnI5enJDM2xaQ0hzQ3ZuVE5YT21TOG85eEJOTTh1RDBvWXNlVWtKYUs4QUtOcldBVkNRclZjCkhNSzhSa3VNTUtrQ2dnRUJBT25md0FQZE81YWhkZlJwZm45YXdnTHF4UGZ0T0o0cnlWTFc5L0pxRCtna01Bd0wKUHVKdUNieDJVakFUa3A5RVBJZkVVeG1rSTZTcjZFaVVDNXZmVDk5aENCZVN1VFY4K2Q0Q0ZVVlBpN0tQREtOdQpma1NsUmJXdzhJdmpzUThsdStJZVZyVk1PUVZwWDFDMHhMMk5JTHJsRk9HUkZGdVBPOTZBbEdrMDRTTmdSMlJkCnRGY1IxK1orckpCbzhoTnN3K1E3MGpaSHdKK01pSk5YNkE0c09jRmE4Umd3N2xxZzRrRUlYLzI5QXdKaEh4K2gKdlluMHJmdFBQcm9aRlZZeHlvVFRzanJPV0lCQ1c1aWo3LzRmR0ZTQ2JYVU1WckJYNTZCZjE1OTFNcGM3dGhNSApxOWZNNXdlSHNQb3BlS3l5RmM2NThoNU9vck5yV1JNV3Z3Vnk3dWtDZ2dFQkFKUWFZd2grWE1qNzYwL1BQZ3RnClNpd1ROeHgzaVUyUlhNT3JXem4yUmRTYkNVQk5ac2tPL3pHUWNqM2NGSHQ0YkNSSFk3aEtkRnhOeVJzQjBCdlYKQzk4SVQ0ZC9Yd21LR3JCQWZKdllqTERMUFNUVXYzRUVRMit6L0hGRU1sNnQwN2pjL2MwejROU2ZnRFdRbUcybgpoc29qSURrb0V3ejV0b2YrMXc4M1VHRG5yUS9BdUlBNFZIWDcwaVVUellScjJFZHBKY0xpV2lUMkh1a2lmQjJzClNOQjU4N3g0VktCTWprSlVYb0FNNkhLd3pRMEY0M21mMzRRdnZnVHJPVnI1TjRFYnVHV1JaUVRwbmZTckx3Z3oKQTR0dVRaZmFOQlpmZUowRXJJYi9FQ2JxOWk3RHNLYkM3NUhCSG5DMkMxSnkzSWRtUUU2OCsyTk9taFZXQ2xnOApGckVDZ2dFQU53WlpnN2ZXaEl4emlrcnBia1Vsa0JQR283RVh4T2hpcG4vU3VzY3kzd01nR0RDRm9ISFdrajY1CndtN2tKMGVxL1hrTE5KVXZEWllNbkFJZ2tFYnFyeXREaW5TVnlYUGt1S3FnTURlV1ZMRnFTZ3ppdWUwUHdIRncKeHNFNnIrR3JzTGhhVHR5M3YxemRUclg2dTczclNuN0xZVWs5S2hURjR3ajF4UmJWSjdNd0RNb01PNnFDMTFzTAp5aXM4NmxSM3dwNnlSaTlHMUpqTmpsTTNSa1ZXV2VCM0VYUE1HVjkvMmlUbE5zc0ppTTJEdnJ2SEtYcHczWExiClFVOHVySlRrdG12U0ErcU1LbUJKRWMrZXFhL1M5OTYyT3hDLzBmYTBOQUMxWmxJcHpPNEFKSDBQZXdHZjhBVWUKMEh6anc1QUdoT2dGQUgySzhCTkk4dk05QXdLaE9nPT0KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nacos-headless
+  namespace: dev-nacos
+  labels:
+    app: nacos-headless
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: nacos
+  ports:
+    - port: 8848
+      name: server
+      targetPort: 8848
+    - port: 9848
+      name: client-rpc
+      targetPort: 9848
+    - port: 9849
+      name: raft-rpc
+      targetPort: 9849
+    # 兼容1.4.x版本的选举端口
+    - port: 7848
+      name: old-raft-rpc
+      targetPort: 7848
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nacos-cm
+  namespace: dev-nacos
+data:
+  mysql.host: "mysql-x.dev-mysql"
+  mysql.db.name: "dev_nacos" # 需提前手动创建好数据库，并执行初始化语句 https://github.com/alibaba/nacos/blob/2.3.0/distribution/conf/mysql-schema.sql
+  mysql.port: "3306"
+  mysql.user: "root"
+  mysql.password: "xhBQ9QN7d+sF"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nacos
+  namespace: dev-nacos
+spec:
+  podManagementPolicy: Parallel
+  serviceName: nacos-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          #requiredDuringSchedulingIgnoredDuringExecution:
+          #  - labelSelector:
+          #      matchExpressions:
+          #        - key: "app"
+          #          operator: In
+          #          values:
+          #            - nacos
+          #    topologyKey: "kubernetes.io/hostname"
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: "app"
+                  operator: In
+                  values:
+                  - nacos
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+        - name: peer-finder-plugin-install
+          image: nacos/nacos-peer-finder-plugin:1.1  # 用于在Kubernetes环境中自动发现和注册 Nacos 节点
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /home/nacos/plugins/peer-finder
+              name: data
+              subPath: peer-finder
+      containers:
+        - name: nacos
+          imagePullPolicy: Always
+          image: nacos/nacos-server:v2.3.0
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 50m
+            limits: 
+              memory: 1Gi
+              cpu: 1000m
+          ports:
+            - containerPort: 8848
+              name: client
+            - containerPort: 9848
+              name: client-rpc
+            - containerPort: 9849
+              name: raft-rpc
+            - containerPort: 7848
+              name: old-raft-rpc
+          env:
+            - name: NACOS_AUTH_ENABLE # nacos.core.auth.enabled，NACOS 集群鉴权启用开关 ，默认 false
+              value: "true"
+            - name: NACOS_AUTH_TOKEN # nacos.core.auth.plugin.nacos.token.secret.key
+              #节点间密钥需要保持一致
+              #自定义密钥时，推荐将配置项设置为Base64编码的字符串，且原始密钥长度不得低于32字符
+              value: "ZWVkNWYwZWItMTlkOC00OGNkLWE0MjItZWEyZjUyOGFjNTFlCg=="
+            - name: NACOS_AUTH_IDENTITY_KEY # nacos.core.auth.server.identity.key 启用集群鉴权后需设置，服务端之间通信的身份识别的key（不可为空）
+              value: "kUFdkKrs"
+            - name: NACOS_AUTH_IDENTITY_VALUE # nacos.core.auth.server.identity.value 启用集群鉴权后需设置，服务端之间通信的身份识别的value（不可为空）
+              value: "ZJbd#&m5j4Jhc,p%McBr-E8Qyi6UAAQF"
+            - name: NACOS_REPLICAS
+              value: "3"
+            - name: SERVICE_NAME
+              value: "nacos-headless"
+            - name: DOMAIN_NAME
+              value: "cluster.local"
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: MYSQL_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.host
+            - name: MYSQL_SERVICE_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.db.name
+            - name: MYSQL_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.port
+            - name: MYSQL_SERVICE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.user
+            - name: MYSQL_SERVICE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: nacos-cm
+                  key: mysql.password
+            - name: SPRING_DATASOURCE_PLATFORM
+              value: "mysql"
+            - name: NACOS_SERVER_PORT
+              value: "8848"
+            - name: NACOS_APPLICATION_PORT
+              value: "8848"
+            - name: PREFER_HOST_MODE
+              value: "hostname"
+            #- name: NACOS_SERVERS
+            #  value: "nacos-0.nacos-headless.dev-nacos.svc.cluster.local:8848 nacos-1.nacos-headless.dev-nacos.svc.cluster.local:8848 nacos-2.nacos-headless.dev-nacos.svc.cluster.local:8848"
+          volumeMounts:
+            - name: data
+              mountPath: /home/nacos/plugins/peer-finder
+              subPath: peer-finder
+            - name: data
+              mountPath: /home/nacos/data
+              subPath: data
+            - name: data
+              mountPath: /home/nacos/logs
+              subPath: logs
+            - name: timezone
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: timezone
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        #annotations:
+        #  volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+      spec:
+        accessModes: [ "ReadWriteMany" ]
+        resources:
+          requests:
+            storage: 2Gi
+---
+# 内部系统，不可暴露到公网
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nacos-headless
+  namespace: dev-nacos
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - nacos-web.zhch.lan
+    secretName: zhch.lan
+  rules:
+  - host: nacos-web.zhch.lan
+    http:
+      paths:
+      - path: /nacos
+        pathType: Prefix
+        backend:
+          service: 
+            name: nacos-headless
+            port:
+              name: server
 ```
 
