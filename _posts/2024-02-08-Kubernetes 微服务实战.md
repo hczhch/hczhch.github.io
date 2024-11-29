@@ -9,6 +9,7 @@ tags:
     - 微服务
     - MySQL
     - Redis
+    - RocketMQ
 
 ---
 
@@ -401,4 +402,241 @@ ingress-nginx-controller-admission   ClusterIP      10.103.114.33   <none>      
   * redis-x.dev-redis:6379
 * 外网：
   * 192.168.99.240:18623
+
+
+## RocketMQ
+
+### NameSpace
+
+```shell
+[root@k8s-master1 ~]# kubectl create namespace dev-mq
+namespace/dev-mq created
+```
+
+### Secret
+
+```shell
+[root@k8s-master1 ~]# kubectl create secret tls zhch.lan -n dev-mq \
+                      --cert=/home/zc/cert/zhch.lan.crt \
+                      --key=/home/zc/cert/zhch.lan.key
+secret/zhch.lan created
+```
+
+### Helm
+
+* <https://github.com/itboon/rocketmq-helm>
+
+```shell
+[root@k8s-master1 ~]# helm repo add rocketmq-repo https://helm-charts.itboon.top/rocketmq
+"rocketmq-repo" has been added to your repositories
+
+[root@k8s-master1 ~]# helm repo update rocketmq-repo
+
+[root@k8s-master1 ~]# helm search repo rocketmq
+NAME                  	CHART VERSION	APP VERSION	DESCRIPTION        
+rocketmq-repo/rocketmq	3.0.3        	4.9.7      	RocketMQ Helm chart
+```
+
+```shell
+[root@k8s-master1 ~]# mkdir test/rocketmq
+[root@k8s-master1 ~]# cd test/rocketmq
+[root@k8s-master1 rocketmq]# helm pull rocketmq-repo/rocketmq
+[root@k8s-master1 rocketmq]# ls
+rocketmq-3.0.3.tgz
+[root@k8s-master1 rocketmq]# tar -zxf rocketmq-3.0.3.tgz
+[root@k8s-master1 rocketmq]# ls
+rocketmq  rocketmq-3.0.3.tgz
+[root@k8s-master1 rocketmq]# cp rocketmq/values.yaml .
+[root@k8s-master1 rocketmq]# vim values.yaml
+```
+
+```yaml
+clusterName: "rocketmq-cluster-a"
+
+image:
+  repository: "apache/rocketmq"
+  pullPolicy: IfNotPresent
+  tag: "4.9.7"
+
+broker:
+  size:
+    master: 1
+    replica: 0
+  
+  master:
+    brokerRole: ASYNC_MASTER
+    ## jvmMemory: "-Xms1g -Xmx1g"
+    jvm:
+      maxHeapSize: 1024M
+      # javaOptsOverride: ""
+    resources:
+      limits:
+        cpu: 1
+        memory: 1.5Gi
+      requests:
+        cpu: 20m
+        memory: 0.5Gi
+  
+  replica:
+    ## jvmMemory: "-Xms1g -Xmx1g"
+    jvm:
+      maxHeapSize: 1024M
+      # javaOptsOverride: ""
+    resources:
+      limits:
+        cpu: 1
+        memory: 1.5Gi
+      requests:
+        cpu: 20m
+        memory: 0.5Gi
+
+  persistence:
+    enabled: true
+    size: 2Gi
+    #storageClass: "gp2"
+  
+  config:
+    ## brokerClusterName brokerName brokerRole brokerId 由内置脚本自动生成
+    deleteWhen: "04"
+    fileReservedTime: "48"
+    flushDiskType: "ASYNC_FLUSH"
+    waitTimeMillsInSendQueue: "1000"
+    #transientStorePoolEnable: "true"
+    #transferMsgByHeap: "false"
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## broker.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+nameserver:
+  replicaCount: 1
+
+  jvm:
+    maxHeapSize: 1024M
+    # javaOptsOverride: ""
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1.5Gi
+      ephemeral-storage: 2Gi
+    requests:
+      cpu: 20m
+      memory: 0.5Gi
+      ephemeral-storage: 0.2Gi
+  
+  persistence:
+    enabled: true
+    size: 2Gi
+    #storageClass: "gp2"
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## nameserver.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+proxy:
+  enabled: false
+  replicaCount: 1
+  jvm:
+    maxHeapSize: 1024M
+    # javaOptsOverride: ""
+
+  resources:
+    limits:
+      cpu: 2
+      memory: 1.5Gi
+    requests:
+      cpu: 10m
+      memory: 0.5Gi
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## proxy.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  ## proxy.service
+  service:
+    annotations: {}
+    type: ClusterIP
+
+dashboard:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "apacherocketmq/rocketmq-dashboard"
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+
+  jvm:
+    maxHeapSize: 256M
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 20m
+      memory: 512Mi
+  
+  service:
+    annotations: {}
+    type: ClusterIP
+    # nodePort: 31007
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations: {}
+      # nginx.ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/8,124.160.30.50
+    hosts:
+      - host: rocketmq-dashboard.zhch.lan
+    tls: 
+    - secretName: zhch.lan
+      hosts:
+      - rocketmq-dashboard.zhch.lan
+```
+
+```shell
+[root@k8s-master1 rocketmq]# cd ..
+[root@k8s-master1 rocketmq]# helm install dev-rocketmq-x -f ./values.yaml ./rocketmq/ -n dev-mq
+W0104 14:15:28.111141  617336 warnings.go:70] spec.template.spec.containers[0].resources.requests[ephemeral-storage]: fractional byte value "214748364800m" is invalid, must be an integer
+NAME: dev-rocketmq-x
+LAST DEPLOYED: Thu Jan  4 14:15:27 2024
+NAMESPACE: dev-mq
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+>>> Nameserver Address:
+    dev-rocketmq-x-nameserver.dev-mq:9876
+
+>>> Visit RocketMQ Dashboard:
+    https://rocketmq-dashboard.zhch.lan/
+```
 
