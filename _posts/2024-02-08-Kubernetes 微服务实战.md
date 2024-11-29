@@ -1165,6 +1165,6 @@ spec:
 ## 项目实战
 
 - 后端项目：
-  - [https://github.com/hczhch/tensquare_parent/tree/k8s/](https://github.com/hczhch/tensquare_parent/tree/k8s/)
+  - [https://github.com/hczhch/tensquare_parent/tree/k8s/](https://github.com/hczhch/tensquare_parent/tree/k8s/){:target="_blank"}
 - 前端项目：
-  - [https://github.com/hczhch/tensquare-admin/tree/k8s/](https://github.com/hczhch/tensquare-admin/tree/k8s/)
+  - [https://github.com/hczhch/tensquare-admin/tree/k8s/](https://github.com/hczhch/tensquare-admin/tree/k8s/){:target="_blank"}
