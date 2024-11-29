@@ -8,6 +8,7 @@ tags:
     - Kubernetes
     - 微服务
     - MySQL
+    - Redis
 
 ---
 
@@ -203,4 +204,201 @@ ingress-nginx-controller-admission   ClusterIP      10.103.114.33   <none>      
     * mysql-x.dev-mysql:3306
 * 外网：
     * 192.168.99.240:31437
+
+
+## Redis
+### NameSpace
+
+```shell
+[root@k8s-master1 ~]# kubectl create namespace dev-redis
+namespace/dev-redis created
+```
+
+### Secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-x-conf
+  namespace: dev-redis
+type: Opaque
+stringData: 
+  redis.conf: |
+    port 6379
+    bind 0.0.0.0
+    appendonly yes
+    daemonize no
+    protected-mode yes
+    requirepass A3c5XpA~3g+8
+```
+
+### Install
+
+```yaml
+apiVersion: v1
+kind: Service 
+metadata:
+  name: redis-x
+  namespace: dev-redis
+spec:
+  selector: 
+    app: redis-x
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-x
+  namespace: dev-redis
+  labels:
+    app: redis-x
+spec:
+  serviceName: "redis-x"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-x
+  template:
+    metadata:
+      labels:
+        app: redis-x
+    spec:
+      containers:
+      - name: redis-x
+        image: redis:6.2.14
+        imagePullPolicy: IfNotPresent
+        #command: ["docker-entrypoint.sh"]
+        args: ["redis-server", "/etc/redis/redis.conf"]
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+          - name: redis-x
+            mountPath: /data
+          - name: conf
+            mountPath: /etc/redis/redis.conf
+            subPath: redis.conf
+          - name: timezone
+            mountPath: /etc/localtime
+            readOnly: true
+      volumes:
+      - name: conf
+        secret:
+          secretName: redis-x-conf
+          items: 
+          - key: redis.conf
+            path: redis.conf
+      - name: timezone
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-x
+      labels:
+        app: redis-x
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      #storageClassName: "managed-nfs-storage"
+      resources:
+        requests:
+          storage: 2Gi
+```
+
+### Ingress TCP
+
+* ConfigMap
+
+```yaml
+[root@k8s-master1 ~]# kubectl edit cm ingress-tcp -n ingress-nginx
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-tcp
+  namespace: ingress-nginx
+data:
+  22: "devops/gitlab:22" # namespace/service:port ，key 与 port 可以不一样
+  3306: "dev-mysql/mysql-x:3306"
+  6379: "dev-redis/redis-x:6379"
+```
+
+* service/ingress-nginx-controller
+
+
+```shell
+[root@k8s-master1 ~]# kubectl edit service/ingress-nginx-controller -n ingress-nginx
+  ports:
+  - appProtocol: http
+    name: http
+    nodePort: 31734
+    port: 80
+    protocol: TCP
+    targetPort: http
+  - appProtocol: https
+    name: https
+    nodePort: 32740
+    port: 443
+    protocol: TCP
+    targetPort: https
+  - name: gitlab-ssh
+    port: 22
+    protocol: TCP
+    targetPort: 22
+  - name: dev-mysql-x
+    port: 31437
+    protocol: TCP
+    targetPort: 3306
+  - name: dev-redis-x # 新增
+    port: 18623 # 外网访问的端口
+    protocol: TCP
+    targetPort: 6379 # ConfigMap 中的 key
+```
+
+* deploy/ingress-nginx-controller
+
+```shell
+[root@k8s-master1 ~]# kubectl edit deploy/ingress-nginx-controller -n ingress-nginx
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: ingress-nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/version: 1.9.4
+    spec:
+      containers:
+      - args:
+        - /nginx-ingress-controller
+        - --tcp-services-configmap=ingress-nginx/ingress-tcp # 新增
+        - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --election-id=ingress-nginx-leader
+        - --controller-class=k8s.io/ingress-nginx
+        - --ingress-class=nginx
+        - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --validating-webhook=:8443
+        - --validating-webhook-certificate=/usr/local/certificates/cert
+        - --validating-webhook-key=/usr/local/certificates/key
+
+[root@k8s-master1 ~]# kubectl rollout restart deploy/ingress-nginx-controller -n ingress-nginx
+deployment.apps/ingress-nginx-controller restarted
+```
+
+### 访问
+
+```shell
+[root@k8s-master1 kubernetes]# kubectl get svc -n ingress-nginx
+NAME                                 TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                   AGE
+ingress-nginx-controller             LoadBalancer   10.108.29.171   192.168.99.240   80:31734/TCP,443:32740/TCP,22:31256/TCP   13d
+ingress-nginx-controller-admission   ClusterIP      10.103.114.33   <none>           443/TCP                                   13d
+```
+
+* kubernetes 集群内部：
+  * redis-x.dev-redis:6379
+* 外网：
+  * 192.168.99.240:18623
 
