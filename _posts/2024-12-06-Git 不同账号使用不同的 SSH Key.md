@@ -15,7 +15,7 @@ tags:
 ssh-keygen -t ed25519 -C "user1@gmail.com"
 # 私钥 ~/.ssh/id_ed25519  公钥：~/.ssh/id_ed25519.pub
 
-ssh-keygen -t rsa -b 4096 -C "user2@gmail.com"
+#ssh-keygen -t rsa -b 4096 -C "user2@gmail.com"
 # 私钥 ~/.ssh/id_rsa  公钥：~/.ssh/id_rsa.pub
 
 ssh-keygen -t rsa -b 4096 -C "user3@gmail.com" -f id_rsa_user3
@@ -28,6 +28,9 @@ ssh-keygen -t rsa -b 4096 -C "user3@gmail.com" -f id_rsa_user3
 ```text
 # ~/.ssh/config
 
+# 不同的平台，如 Github、Gitee 之间可以使用相同的 SSH Key
+# Github 中不同账号不能使用相同的 SSH Key
+
 Host gitee.com
     HostName gitee.com
     IdentityFile ~/.ssh/id_ed25519
@@ -36,7 +39,6 @@ Host github.com
     HostName github.com
     IdentityFile ~/.ssh/id_ed25519
 
-# Github 中不同账号不能使用同样的 SSH Key
 Host github-user3.com # 任意的自定义名
     HostName github.com
     IdentityFile ~/.ssh/id_rsa_user3
