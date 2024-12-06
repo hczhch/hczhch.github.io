@@ -18,7 +18,7 @@ ssh-keygen -t ed25519 -C "user1@gmail.com"
 ssh-keygen -t rsa -b 4096 -C "user2@gmail.com"
 # 私钥 ~/.ssh/id_rsa  公钥：~/.ssh/id_rsa.pub
 
-ssh-keygen -t rsa -b 4096 -C "user3" -f id_rsa_user3
+ssh-keygen -t rsa -b 4096 -C "user3@gmail.com" -f id_rsa_user3
 # 私钥 ~/.ssh/id_rsa_user3  公钥：~/.ssh/id_rsa_user3.pub
 ```
 
@@ -27,6 +27,7 @@ ssh-keygen -t rsa -b 4096 -C "user3" -f id_rsa_user3
 #### 编辑 ~/.ssh/config 文件
 ```text
 # ~/.ssh/config
+
 Host gitee.com
     HostName gitee.com
     IdentityFile ~/.ssh/id_ed25519
