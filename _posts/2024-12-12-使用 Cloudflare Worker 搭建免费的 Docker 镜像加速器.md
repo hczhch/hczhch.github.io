@@ -20,7 +20,7 @@ tags:
 * 在 Cloudflare 托管一个域名
 
 ### 搭建
-* Fork repository [https://https://github.com/ciiiii/cloudflare-docker-proxy/](https://https://github.com/ciiiii/cloudflare-docker-proxy/){:target="_blank"} 到自己的 Github 账号
+* Fork repository [https://github.com/ciiiii/cloudflare-docker-proxy/](https://github.com/ciiiii/cloudflare-docker-proxy/){:target="_blank"} 到自己的 Github 账号
 * 进入 fork 好的 repository ，点击 `Settings` -> `Secrets and variables` -> `Actions` -> `Repository secrets` ，添加 Name 为 `CUSTOM_DOMAIN` 的 secret，Value 就是托管在 Cloudflare 的域名
 * 修改 repository 中的 `wrangler.toml` ，将所有 route 中的 `libcuda.so` 修改为托管在 Cloudflare 的域名，并删除 route 前的注释符号 `#`
 * 修改 repository 中的 `README.md`，将所有的 `https://github.com/ciiiii/cloudflare-docker-proxy` 修改为自己的 repository 地址
