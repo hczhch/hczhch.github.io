@@ -42,7 +42,7 @@ Host github.com
 Host github-user3.com # 任意的自定义名
     HostName github.com
     IdentityFile ~/.ssh/id_rsa_user3
-
+    ProxyCommand connect -S 127.0.0.1:7779 %h %p # 让 git SSH 使用代理
 ```
 
 #### 使用样例
